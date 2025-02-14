@@ -1,11 +1,11 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8"
-	pageEncoding="UTF-8"%>
+    pageEncoding="UTF-8"%>
 <!DOCTYPE html>
 <html>
 <head>
 <meta charset="UTF-8">
-<title>회원가입 성공</title>
-<link href="<%=request.getContextPath()%>/resources/css/member/create_result.css" 
+<title>로그인 실패</title>
+<link href='/resources/css/member/login_result.css' 
 rel="stylesheet" type="text/css">
 </head>
 <body>
@@ -14,12 +14,14 @@ rel="stylesheet" type="text/css">
 	<section>
 		<div id="section_wrap">
 			<div class="word">
-				<h3>회원가입 성공! 로그인해주세요.</h3>
+				<h3>로그인 실패!!</h3>
+				<span>(아이디 혹은 비밀번호를 확인해보세요.)</span>
 			</div>
 			<div class="others">
-				<a href="/memberLogin">로그인</a>
+				<a href='/memberCreate'>회원가입</a>
+				<a href='/memberLogin'>로그인</a>
 			</div>
 		</div>
-	</section>
+	</section>	
 </body>
 </html>
