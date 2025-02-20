@@ -17,16 +17,46 @@ import com.gn.board.vo.Board;
 
 public class BoardDao {
 	
+	public Attach selectAttachOne(Connection conn, int attachNo) {
+		PreparedStatement pstmt = null;
+		ResultSet rs = null;
+		Attach a = null;
+		try {
+			String sql = "SELECT * FROM `attach` WHERE attach_no = ?";
+			pstmt = conn.prepareStatement(sql);
+			pstmt.setInt(1, attachNo);
+			rs=pstmt.executeQuery();
+			if(rs.next()) {
+				a = new Attach();
+				a.setAttachNo(rs.getInt("attach_no"));
+				a.setOriName(rs.getString("ori_name"));
+				a.setNewName(rs.getString("new_name"));
+				a.setAttachPath(rs.getString("attach_path"));
+//				a.setBoardNo(rs.getInt("board_no"));
+			}
+			
+		}catch(Exception e) {
+			e.printStackTrace();
+		}finally {
+			close(rs);
+			close(pstmt);
+		}
+		return a;
+	}
+	
+	
 	public Board selectBoardOne(Connection conn, int boardNo) {
 		PreparedStatement pstmt = null;
 		ResultSet rs = null;
 		Board board = null;
 		try {
 			String sql = "SELECT b.board_no ,b.board_title ,b.board_content ,b.board_writer "
-					+ ",b.reg_date ,b.mod_date ,m.member_name ,a.new_name "
+					+ ",b.reg_date ,b.mod_date ,m.member_name ,a.attach_no "
 					+ "FROM `board` b "
 					+ "JOIN `member` m "
 					+ "ON b.board_writer = m.member_no "
+					+ "JOIN `attach` a "
+					+ "ON b.board_no = a.board_no "
 					+ "WHERE b.board_no = ?";
 			pstmt = conn.prepareStatement(sql);
 			pstmt.setInt(1,boardNo);
@@ -38,9 +68,9 @@ public class BoardDao {
 				board.setBoardContent(rs.getString("board_content"));
 				board.setBoardWriter(rs.getInt("board_writer"));
 				board.setMemberName(rs.getString("member_name"));
-				board.setNewName(rs.getString("new_name"));
 				board.setRegDate(rs.getTimestamp("reg_date").toLocalDateTime());
 				board.setModDate(rs.getTimestamp("mod_date").toLocalDateTime());
+				board.setAttachNo(rs.getInt("attach_no"));
 			}
 		}catch(Exception e) {
 			e.printStackTrace();
