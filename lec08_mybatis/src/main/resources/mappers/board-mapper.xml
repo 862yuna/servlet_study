@@ -1,93 +1,112 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!-- 무슨 의도로 만들어진 파일입니다~ 라는 뜻 -->
+<!-- 
+	1. jar
+	2. mybatis config 만들기 - properties 바깥에 만들고 안쪽에 불러서 쓴다.
+	3. mapper 만들기
+	4. sessionTemplate 만들기.
+ -->
 <!DOCTYPE mapper PUBLIC
 "-//mybatis.org//DTD Mapper 3.0//EN"
 "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="boardMapper">
-	<resultMap type="com.gn.board.vo.Board" id="boardMap">
+	<!-- 줄 바꾸기 띄어쓰기 mybatis가 알아서 해결해줌 -->
+	<!-- vo는 카멜케이스, DB는 _가 있어서 그거 호환 해주기 -->
+	<!-- <resultMap type="com.gn.board.vo.Board" id="boardMap"> -->
+	<!-- 별칭 설정 -->
+	<resultMap type="boardVo" id="boardMap">
+		<!-- 
+			컬럼명과 필드명을 1대1로 써준다.
+		 	vo의 필드명과 테이블의 컬럼명이 다르기 때문에 맞춰즌 것!
+		 -->
 		<result property="boardNo" column="board_no"/>
 		<result property="boardTitle" column="board_title"/>
 		<result property="boardContent" column="board_content"/>
 		<result property="boardWriter" column="board_writer"/>
 		<result property="regDate" column="reg_date"/>
-		<result property="modDate" column="mod_date"/>	
+		<result property="modDate" column="mod_date"/>
 	</resultMap>
-	<insert id="insertMany" parameterType="list">
-		INSERT INTO `board`(board_title ,board_content ,board_writer)
-		VALUES
-		<foreach collection="list" item="board" separator=",">
-			(#{board.boardTitle} ,#{board.boardContent} ,#{board.boardWriter})
-		</foreach>
-	</insert>
-	
-	<insert id="boardCreate" parameterType="board"
-	useGeneratedKeys="true" keyProperty="boardNo">
-		INSERT INTO `board`(board_title ,board_content ,board_writer)
-		VALUES(#{boardTitle} ,#{boardContent} ,#{boardWriter})
-	</insert>
-	
-	<delete id="boardDelete" parameterType="board">
-		DELETE
-		FROM `board`
-		WHERE board_no = #{boardNo}
-	</delete>
-	
-	<update id="boardUpdate" parameterType="board" >
-		UPDATE `board` 
-		SET board_title = #{boardTitle}
-		,board_content = #{boardContent}
-		WHERE board_no = #{boardNo}
-	</update>
-	
-	<select id="boardThree" resultMap="boardMap" parameterType="board">
-		SELECT *
-		FROM `board`
-		WHERE board_title = #{boardTitle}
-		AND board_content = #{boardContent}
-	</select>
-	
-	<select id="boardTwo" resultMap="boardMap" parameterType="map">
-		SELECT *
-		FROM `board`
-		WHERE board_title = #{board_title}
-		AND board_content = #{board_content}
-	</select>
-	
-	<select id="boardOne" resultMap="boardMap" parameterType="_int">
-		SELECT *
-		FROM `board`
-		<where>
-			board_no = #{boardNo}
-		</where>
-	</select>
-	
-	
-	<select id="boardList" resultMap="boardMap" parameterType="board">
-		SELECT *
+	<!-- 속성으로 위에 있는 resultMap="위에 쓴 아이디" -->
+	<!-- 이거까지 해줘야 컬럼명, 필드명 호환된다. -->
+	<!-- <select id="boardList" resultType="com.gn.board.vo.Board" resultMap="boardMap"> -->
+	<!-- 별칭 설정 -->
+	<!-- 반환 받는 애가 List처럼 여러개 필요할 경우 resultType으로 vo 써줘야한다. -->
+	<!-- <select id="boardList" resultType="boardVo" resultMap="boardMap"> -->
+	<select id="boardList" resultMap="boardMap" parameterType="boardVo">
+		SELECT b.* ,m.member_name 
 		FROM `board` b
-		JOIN `member` m
-		ON m.member_no = b.board_writer
+		JOIN `member` m ON b.board_writer = m.member_no
 		<where>
 			<if test='boardTitle != null and boardTitle.equals("") == false'>
-				AND board_title LIKE CONCAT('%' ,#{boardTitle} ,'%')
+				AND b.board_title LIKE CONCAT('%',#{boardTitle},'%')
 			</if>
 			<if test='boardContent != null and boardContent.equals("") == false'>
-				AND board_content LIKE CONCAT('%' ,#{boardContent} ,'%')
+				AND b.board_content LIKE CONCAT('%',#{boardContent},'%')
 			</if>
 			<if test='memberName != null and memberName.equals("") == false'>
-				AND member_name LIKE CONCAT('%' ,#{memberName} ,'%')
+				AND m.member_name LIKE CONCAT('%',#{memberName},'%')
 			</if>
 		</where>
 		<if test='orderType != null and orderType.equals("-1") == false'>
 			<choose>
-				<when test='orderType.equals("1") == true'>
-					ORDER BY reg_date DESC
+				<when test='orderType.equals("1")'>
+					ORDER BY b.reg_date DESC
 				</when>
 				<otherwise>
-					ORDER BY reg_date ASC
+					ORDER BY b.reg_date ASC
 				</otherwise>
 			</choose>
 		</if>
-		
 	</select>
-
+	<!-- #{}가 jdbc에서 ? 느낌이다. 보통 #{} 안에는 dao에서 썼던 매개변수를 쓴다.(아무렇게나 써도 괜찮긴함. 그런데 여러개 보낼때는 다른 형식있나봄) -->
+	<!-- resultType 없어도 괜찮네? 왜????? -->
+	<select id="boardOne" resultMap="boardMap" parameterType="_int">
+		SELECT * 
+		FROM `board` 
+		<!-- WHERE board_no = #{ㅏㅣㄴ루퓨ㅐ9ㅑㅈ구허락퍄ㅕ 너ㅏㅗㅠㅍ23ㅓㄹ퍼ㅜㅑㅈㄷ} -->
+		<!-- where절 사용방법! 태그 안에 넣기 끝! where 쓰면 좋은 점. 조건식이 같이 오면 AND를 알아서 더하거나 빼줌 -->
+		<where>
+			board_no = #{boardNo}
+			
+		</where>
+	</select>
+	<!-- Map 형식으로 받아와서 parameterType="map"으로 설정해주고 안에서 가져와 쓸때는 #{맵의 키 이름 쓰기} -->
+	<select id="boardTwo" resultMap="boardMap" parameterType="map">
+		SELECT * 
+		FROM `board` 
+		WHERE board_title = #{board_title} 
+		and board_content = #{board_content}
+	</select>
+	<!-- Board vo를 받아와서 조회 해보기 parameterType="패키지명부터 써거나 별칭 쓰기" 안에서 가져와 쓸때는 #{필드명} -->
+	<select id="boardThree" resultMap="boardMap" parameterType="boardVo">
+		SELECT * 
+		FROM `board` 
+		WHERE board_title = #{boardTitle} 
+		and board_content = #{boardContent}
+	</select>
+	<update id="boardUpdate" parameterType="boardVo">
+		UPDATE `board`
+		SET board_title = #{boardTitle}
+		,board_content = #{boardContent}
+		WHERE board_no = #{boardNo}
+	</update>
+	<delete id="boardDelete" parameterType="_int">
+		DELETE FROM `board`
+		WHERE board_no = #{boardNo}
+	</delete>
+	<!-- useGeneratedKeys=true, keyProperty= PK값이 들어갈 수 있는 필드로! -->
+	<insert id="boardInsert" parameterType="boardVo" useGeneratedKeys="true" keyProperty="boardNo">
+		INSERT INTO `board`(board_title ,board_content ,board_writer)
+		VALUES(#{boardTitle} ,#{boardContent} ,#{boardWriter})
+	</insert>
+		<!-- 이걸 반복문으로 돌려버리자! -->
+		<!-- VALUES(#{boardTitle} ,#{boardContent} ,#{boardWriter}) -->
+	<insert id="insertMany" parameterType="list">
+		INSERT INTO `board`(board_title ,board_content ,board_writer)
+		VALUES
+		<foreach collection="list" item="bd" separator=",">
+			(#{bd.boardTitle} ,#{bd.boardContent} ,#{bd.boardWriter})
+		</foreach>
+	</insert>
+	
 </mapper>
